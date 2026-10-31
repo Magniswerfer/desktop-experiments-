@@ -64,6 +64,23 @@
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ds-paper: #111112;
+  --ds-paper-sunken: #1a1a1c;
+  --ds-paper-raised: #202023;
+  --ds-ink: #f2f2ef;
+  --ds-ink-muted: #b4b4b0;
+  --ds-ink-faint: #8e8e8a;
+  --ds-ink-inverse: #111112;
+  --ds-rule-strong: #f2f2ef;
+  --ds-rule-soft: #323235;
+  --ds-signal-error: #f0715f;
+  --ds-signal-success: #8cc576;
+  --ds-signal-warning: #e3b72b;
+  --ds-signal-focus: #9fb0f5;
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {

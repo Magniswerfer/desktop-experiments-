@@ -132,8 +132,9 @@ const ListRow = memo(function ListRow({ L, it, top, sort, selected, inMulti, onC
   onClick: (id: string, e: React.MouseEvent) => void; onOpen: (id: string) => void; onContext: (id: string, e: React.MouseEvent) => void;
 }) {
   const last = L.lastOpened.get(it.id);
-  const date = sort === 'added' ? it.added : sort === 'modified' ? it.modified : last ?? it.added;
-  const dateHint = sort === 'recent' && !last ? (it.origin === 'received' ? 'Received' : it.origin === 'created' ? 'Created' : 'Added') : '';
+  // Without an open event, show what actually put the item where it is in the list.
+  const date = sort === 'added' ? it.added : sort === 'modified' ? it.modified : last ?? (it.origin === 'existing' ? it.modified : it.added);
+  const dateHint = sort === 'recent' && !last ? (it.origin === 'received' ? 'Received' : it.origin === 'created' ? 'Created' : 'Modified') : '';
   const fresh = isNew(L, it);
   const unkept = it.origin === 'received' && !L.kept(it.id);
   const stats = it.kind === 'folder' ? L.folderStats(it.id) : null;
@@ -204,7 +205,7 @@ export const FileGrid = memo(function FileGrid({ L, ids, onOpen, onContext, onCo
         onDoubleClick={() => onOpen(id)}
         onContextMenu={(e) => { e.preventDefault(); onContext(id, e); }}
       >
-        <span className="cell-thumb"><Thumb item={it} size={124} reps={reps} /></span>
+        <span className="cell-thumb"><Thumb item={it} size={112} reps={reps} /></span>
         <span className="cell-name">{it.name}</span>
         <span className="cell-meta faint"><AvailMark a={it.availability} size={10} /> {fmtWhen(L.lastOpened.get(id) ?? it.added, L.now)}</span>
       </div>,

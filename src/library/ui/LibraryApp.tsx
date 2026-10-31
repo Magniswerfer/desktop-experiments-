@@ -67,7 +67,7 @@ export function LibraryApp({ embedded = false }: { embedded?: boolean }) {
     return ui.multi.length ? ui.multi : ui.sel ? [ui.sel] : [];
   };
 
-  const onKey = (e: React.KeyboardEvent) => {
+  const onKey = (e: React.KeyboardEvent | KeyboardEvent) => {
     const ui = useLibUI.getState();
     const t = e.target as HTMLElement;
     const inField = !!t.closest('input, textarea, select, [contenteditable]');
@@ -146,6 +146,20 @@ export function LibraryApp({ embedded = false }: { embedded?: boolean }) {
       if (it?.origin === 'created' && (it.kind === 'markdown' || it.kind === 'doc')) { e.preventDefault(); if (!ui.ql.open) ui.openQL(it.id); ui.setEditing(ui.editing ? null : it.id); }
     }
   };
+
+  // Standalone: if focus fell to <body> (e.g. an editor closed), keys still reach the library.
+  const keyRef = useRef(onKey);
+  keyRef.current = onKey;
+  useEffect(() => {
+    if (embedded) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.target !== document.body) return;
+      focusList();
+      keyRef.current(e);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [embedded]);
 
   const scopeTitle = (() => {
     const s = prefs.scope;
