@@ -13,7 +13,7 @@ function useKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (t.closest('input, textarea, select, [contenteditable], .lib') || e.metaKey || e.ctrlKey || e.altKey) return;
       const st = useDesktop.getState();
       if (e.key === 't' || e.key === 'T') { useTuning.getState().setPanel(!useTuning.getState().panelOpen); return; }
       if (e.key === 'Escape') { st.focusPoint(st.focus.point); return; }

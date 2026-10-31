@@ -70,7 +70,7 @@ export const AssemblyOverlay = memo(function AssemblyOverlay({ id }: { id: strin
   );
 });
 
-const PRIORITY: AppKind[] = ['terminal', 'messages', 'music', 'editor', 'notes', 'browser'];
+const PRIORITY: AppKind[] = ['terminal', 'messages', 'music', 'editor', 'notes', 'browser', 'library'];
 
 function AssemblyCard({ id, name }: { id: string; name: string }) {
   const rows = useDesktop(
