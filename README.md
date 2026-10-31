@@ -24,7 +24,7 @@ Requires Node 18+. The workspace persists to `localStorage`; **Reset** in the to
 8. **Focus modes (for comparison testing):** the button in the top bar (or `M`) cycles between
    - *Field moves to window* (the concept): attention travels; windows stay home.
    - *Window to centre · overlap*: the lens is fixed at the centre and the focused window travels there; nothing else moves, so it covers whatever is underneath.
-   - *Window to centre · push aside*: as above, but anything overlapping the centred window takes the shortest on-screen escape (left/right/up/down).
+   - *Window to centre · push aside*: as above, but anything overlapping the centred window takes the shortest on-screen escape (left/right/up/down). Pushed windows are judged where they land: further from the centre means less attention, so they shrink (e.g. full → compact), which in turn needs less push.
 
    In both centre modes the window's home position is untouched. It returns when attention leaves (click elsewhere or press `Esc`).
 9. **Tune** (or press `T`): falloff curve and radius, thresholds, magnetism, make-room distance, springs. `[` / `]` move attention between objects; `Esc` releases focus.

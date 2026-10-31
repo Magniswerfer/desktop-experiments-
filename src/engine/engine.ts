@@ -381,10 +381,9 @@ function frame(now: number) {
   const sizes = sizesOf(st);
 
   // ── Attention → presentation → target geometry ──
-  const objs: Obj[] = [];
-  for (const id of objIds) {
-    const A = anchors.get(id)!;
-    const a = falloff(Math.hypot(A.x - focusS.x, A.y - focusS.y) / R, T.curve, T.sharpness) * (focalId && focalId !== id ? T.neighbours : 1);
+  const attentionAt = (id: string, P: Vec) =>
+    falloff(Math.hypot(P.x - focusS.x, P.y - focusS.y) / R, T.curve, T.sharpness) * (focalId && focalId !== id ? T.neighbours : 1);
+  const build = (id: string, A: Vec, a: number): Obj => {
     attention.set(id, a);
     if (!isAsm(id)) {
       const w = st.windows[id];
@@ -392,35 +391,53 @@ function frame(now: number) {
       const p = nextPresentation(presWin.get(id), a, T);
       presWin.set(id, p);
       const r = rectAt(A, windowSize(p, a, w.size, meta.compact, meta.widget, T, fit));
-      objs.push({ id, asm: false, a, members: { [id]: r }, body: r, disp: { x: 0, y: 0 }, topPad: 0, collapsed: false });
-    } else {
-      const asm = st.assemblies[id];
-      const lr = layoutRects(asm.layout, sizes);
-      const bb = bbox(Object.values(lr));
-      const auto = nextAsmPresentation(presAsm.get(id), a, T);
-      const p: AsmPresentation = asm.collapsed && !(drag?.kind === 'member' && drag.asm === id) ? 'collapsed' : auto;
-      presAsm.set(id, p);
-      const members: Record<string, Rect> = {};
-      if (p === 'collapsed') {
-        const card = rectAt(A, CARD);
-        for (const wid in lr) members[wid] = card;
-      } else {
-        const s = Math.min(assemblyScale(p, a, T), fit.w / bb.w, fit.h / bb.h);
-        for (const wid in lr) {
-          const r = lr[wid];
-          members[wid] = { x: A.x + (r.x - bb.x - bb.w / 2) * s, y: A.y + (r.y - bb.y - bb.h / 2) * s, w: r.w * s, h: r.h * s };
-        }
-      }
-      for (const wid in lr) presWin.set(wid, p === 'full' ? 'full' : 'compact');
-      objs.push({ id, asm: true, a, members, body: bbox(Object.values(members)), disp: { x: 0, y: 0 }, topPad: p === 'collapsed' ? 0 : TAB, collapsed: p === 'collapsed' });
+      return { id, asm: false, a, members: { [id]: r }, body: r, disp: { x: 0, y: 0 }, topPad: 0, collapsed: false };
     }
-  }
+    const asm = st.assemblies[id];
+    const lr = layoutRects(asm.layout, sizes);
+    const bb = bbox(Object.values(lr));
+    const auto = nextAsmPresentation(presAsm.get(id), a, T);
+    const p: AsmPresentation = asm.collapsed && !(drag?.kind === 'member' && drag.asm === id) ? 'collapsed' : auto;
+    presAsm.set(id, p);
+    const members: Record<string, Rect> = {};
+    if (p === 'collapsed') {
+      const card = rectAt(A, CARD);
+      for (const wid in lr) members[wid] = card;
+    } else {
+      const sc = Math.min(assemblyScale(p, a, T), fit.w / bb.w, fit.h / bb.h);
+      for (const wid in lr) {
+        const r = lr[wid];
+        members[wid] = { x: A.x + (r.x - bb.x - bb.w / 2) * sc, y: A.y + (r.y - bb.y - bb.h / 2) * sc, w: r.w * sc, h: r.h * sc };
+      }
+    }
+    for (const wid in lr) presWin.set(wid, p === 'full' ? 'full' : 'compact');
+    return { id, asm: true, a, members, body: bbox(Object.values(members)), disp: { x: 0, y: 0 }, topPad: p === 'collapsed' ? 0 : TAB, collapsed: p === 'collapsed' };
+  };
+  let objs: Obj[] = objIds.map((id) => build(id, anchors.get(id)!, attentionAt(id, anchors.get(id)!)));
 
   // ── Spatial stability: nudge (never relocate), then keep inside the screen ──
   if (!drag) {
     if (T.focusMode === 'field' && T.makeRoom > 0) makeRoom(objs, T.makeRoom);
     // centre · push: only the centred object displaces others, far enough to clear it
-    if (T.focusMode === 'center-push' && centredId) pushClear(objs, centredId);
+    if (T.focusMode === 'center-push' && centredId) {
+      // Pushed objects are judged where they end up: further from the lens
+      // means less attention, so they shrink, which in turn needs less push.
+      // A few passes settle it; each object keeps the lowest attention seen.
+      const lowest = new Map<string, number>();
+      for (let pass = 0; pass < 3; pass++) {
+        pushClear(objs, centredId);
+        let shrank = false;
+        for (const o of objs) {
+          if (o.id === centredId || (!o.disp.x && !o.disp.y)) continue;
+          const home = anchors.get(o.id)!;
+          const a = Math.min(lowest.get(o.id) ?? o.a, attentionAt(o.id, { x: home.x + o.disp.x, y: home.y + o.disp.y }));
+          if (a < o.a - 0.005) { lowest.set(o.id, a); shrank = true; }
+        }
+        if (!shrank) break;
+        objs = objIds.map((id) => build(id, anchors.get(id)!, lowest.get(id) ?? attentionAt(id, anchors.get(id)!)));
+      }
+      if (lowest.size) pushClear(objs, centredId);
+    }
     // centre · overlap: nothing else moves at all
   }
   for (const o of objs) {
