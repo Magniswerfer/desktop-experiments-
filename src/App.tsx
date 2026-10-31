@@ -3,7 +3,7 @@ import { startSim } from './apps/sim';
 import { renderedRects } from './engine/engine';
 import { center } from './model/geometry';
 import { useDesktop } from './model/store';
-import { useTuning } from './model/tuning';
+import { FOCUS_MODES, useTuning } from './model/tuning';
 import { DebugPanel } from './ui/DebugPanel';
 import { Desktop } from './ui/Desktop';
 import { TopBar } from './ui/TopBar';
@@ -15,6 +15,12 @@ function useKeys() {
       const t = e.target as HTMLElement;
       if (t.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
       const st = useDesktop.getState();
+      if (e.key === 'm' || e.key === 'M') {
+        const t = useTuning.getState();
+        const i = FOCUS_MODES.findIndex((m) => m.id === t.focusMode);
+        t.set({ focusMode: FOCUS_MODES[(i + 1) % FOCUS_MODES.length].id });
+        return;
+      }
       if (e.key === 't' || e.key === 'T') { useTuning.getState().setPanel(!useTuning.getState().panelOpen); return; }
       if (e.key === 'Escape') { st.focusPoint(st.focus.point); return; }
       if (e.key === '[' || e.key === ']') {

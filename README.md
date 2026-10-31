@@ -21,7 +21,13 @@ Requires Node 18+. The workspace persists to `localStorage`; **Reset** in the to
 5. **Watch the periphery:** far objects become compact views, then widgets (now playing, build status, unread count). Widget buttons (play, run build, quick reply) work *without* pulling attention.
 6. **Assembly summary:** move attention away from *orbit*: its members shrink to compact, then the silhouette condenses into one card showing name, apps and the latest build status. Click it to expand.
 7. **Reload:** membership, arrangement, names and app state come back.
-8. **Tune** (or press `T`): falloff curve and radius, thresholds, magnetism, make-room distance, springs. `[` / `]` move attention between objects; `Esc` releases focus.
+8. **Focus modes (for comparison testing):** the button in the top bar (or `M`) cycles between
+   - *Field moves to window* (the concept): attention travels; windows stay home.
+   - *Window to centre · overlap*: the lens is fixed at the centre and the focused window travels there; nothing else moves, so it covers whatever is underneath.
+   - *Window to centre · push aside*: as above, but anything overlapping the centred window takes the shortest on-screen escape (left/right/up/down).
+
+   In both centre modes the window's home position is untouched. It returns when attention leaves (click elsewhere or press `Esc`).
+9. **Tune** (or press `T`): falloff curve and radius, thresholds, magnetism, make-room distance, springs. `[` / `]` move attention between objects; `Esc` releases focus.
 
 ## How it is built
 

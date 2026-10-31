@@ -3,6 +3,17 @@ import { persist } from 'zustand/middleware';
 
 export type Curve = 'gaussian' | 'linear' | 'smooth' | 'inverse' | 'plateau';
 export type MotionPref = 'auto' | 'reduced' | 'full';
+/**
+ * field         — the attention field travels to the selected window (default).
+ * center        — the selected window travels to the centre; others stay put and may be overlapped.
+ * center-push   — the selected window travels to the centre and pushes overlapping windows aside.
+ */
+export type FocusMode = 'field' | 'center' | 'center-push';
+export const FOCUS_MODES: { id: FocusMode; label: string }[] = [
+  { id: 'field', label: 'Field moves to window' },
+  { id: 'center', label: 'Window to centre · overlap' },
+  { id: 'center-push', label: 'Window to centre · push aside' },
+];
 
 export interface Tuning {
   /** Focus radius as a fraction of the desktop diagonal. */
@@ -30,6 +41,7 @@ export interface Tuning {
   dampingRatio: number;
   focusSpeed: number;
   motion: MotionPref;
+  focusMode: FocusMode;
   showLens: boolean;
   showAttention: boolean;
 }
@@ -55,6 +67,7 @@ export const DEFAULT_TUNING: Tuning = {
   motion: 'auto',
   showLens: false,
   showAttention: false,
+  focusMode: 'field',
 };
 
 interface TuningStore extends Tuning {

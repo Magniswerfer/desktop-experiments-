@@ -1,5 +1,5 @@
 import { falloff } from '../engine/attention';
-import { useTuning, type Curve, type MotionPref, type Tuning } from '../model/tuning';
+import { FOCUS_MODES, useTuning, type Curve, type FocusMode, type MotionPref, type Tuning } from '../model/tuning';
 
 type NumKey = { [K in keyof Tuning]: Tuning[K] extends number ? K : never }[keyof Tuning];
 
@@ -53,6 +53,7 @@ export function DebugPanel() {
   const open = useTuning((s) => s.panelOpen);
   const curve = useTuning((s) => s.curve);
   const motion = useTuning((s) => s.motion);
+  const focusMode = useTuning((s) => s.focusMode);
   if (!open) return null;
   const set = useTuning.getState().set;
   return (
@@ -62,6 +63,17 @@ export function DebugPanel() {
         <button className="bar-btn" onClick={() => useTuning.getState().reset()}>Defaults</button>
         <button className="bar-btn" onClick={() => useTuning.getState().setPanel(false)} aria-label="Close tuning">×</button>
       </div>
+      <section>
+        <div className="dp-sec">Focus mode</div>
+        <div className="dp-modes" role="radiogroup" aria-label="Focus mode">
+          {FOCUS_MODES.map((m) => (
+            <label key={m.id} className="dp-check">
+              <input type="radio" name="focus-mode" checked={focusMode === m.id} onChange={() => set({ focusMode: m.id as FocusMode })} />
+              <span>{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
       <section>
         <div className="dp-sec">Attention</div>
         <label className="dp-row">
@@ -104,7 +116,7 @@ export function DebugPanel() {
         <Toggle k="showLens" label="Show field radius" />
         <Toggle k="showAttention" label="Show attention values" />
       </section>
-      <p className="dp-foot serif">Keys: <kbd>[</kbd> <kbd>]</kbd> move attention between objects · <kbd>T</kbd> toggles this panel · <kbd>Esc</kbd> releases focus.</p>
+      <p className="dp-foot serif">Keys: <kbd>[</kbd> <kbd>]</kbd> move attention between objects · <kbd>M</kbd> cycles focus mode · <kbd>T</kbd> toggles this panel · <kbd>Esc</kbd> releases focus.</p>
     </aside>
   );
 }

@@ -282,6 +282,34 @@ function makeRoom(objs: Obj[], maxPush: number) {
   }
 }
 
+/**
+ * Centre · push: every object overlapping the centred one takes the shortest
+ * of the four axis escapes that keeps it on screen.
+ */
+function pushClear(objs: Obj[], fromId: string) {
+  const A = objs.find((o) => o.id === fromId);
+  if (!A) return;
+  const a = A.body, g = 12;
+  for (const B of objs) {
+    if (B === A) continue;
+    const b = B.body;
+    if (b.x >= a.x + a.w + g || b.x + b.w <= a.x - g || b.y >= a.y + a.h + g || b.y + b.h <= a.y - g) continue;
+    const lo = { x: MARGIN, y: MARGIN + B.topPad }, hi = { x: V.w - MARGIN, y: V.h - MARGIN };
+    const opts: Vec[] = [
+      { x: a.x - g - (b.x + b.w), y: 0 },
+      { x: a.x + a.w + g - b.x, y: 0 },
+      { x: 0, y: a.y - g - (b.y + b.h) },
+      { x: 0, y: a.y + a.h + g - b.y },
+    ];
+    // Only the moved axis matters: the screen clamp settles the other one.
+    const fits = (d: Vec) => (d.x ? b.x + d.x >= lo.x - 0.5 && b.x + b.w + d.x <= hi.x + 0.5 : b.y + d.y >= lo.y - 0.5 && b.y + b.h + d.y <= hi.y + 0.5);
+    const ok = opts.filter(fits).sort((p, q) => Math.hypot(p.x, p.y) - Math.hypot(q.x, q.y));
+    // nothing fits: take the shortest escape anyway; the screen clamp will limit it
+    const d = ok[0] ?? opts.sort((p, q) => Math.hypot(p.x, p.y) - Math.hypot(q.x, q.y))[0];
+    B.disp = { x: B.disp.x + d.x, y: B.disp.y + d.y };
+  }
+}
+
 const clampShift = (x: number, w: number, lo: number, hi: number) =>
   w > hi - lo ? lo - x : x < lo ? lo - x : x + w > hi ? hi - (x + w) : 0;
 
@@ -315,9 +343,18 @@ function frame(now: number) {
   const anchors = new Map<string, Vec>();
   for (const id of objIds) anchors.set(id, drag?.kind === 'object' && drag.obj === id && drag.moved ? dragAnchor(drag) : anchorOf(id));
 
+  // Test modes: instead of the field travelling, the focused object travels to
+  // the centre of the screen. Its stored home anchor is untouched, so it goes
+  // back when attention leaves it.
+  const centred = T.focusMode !== 'field';
+  const centre: Vec = { x: V.w / 2, y: V.h / 2 };
+  const centredId = centred && st.focus.obj && anchors.has(st.focus.obj) && !(drag?.kind === 'object' && drag.obj === st.focus.obj && drag.moved) ? st.focus.obj : null;
+  if (centredId) anchors.set(centredId, centre);
+
   // ── Focus field ──
   let ft: Vec;
   if (drag?.kind === 'object' && drag.moved) ft = anchors.get(drag.obj)!;
+  else if (centred) ft = centre; // the lens is fixed; windows come to it
   else if (st.focus.obj && anchors.has(st.focus.obj)) ft = anchors.get(st.focus.obj)!;
   else ft = { x: st.focus.point.x * V.w, y: st.focus.point.y * V.h };
   if (!focusS.init || reduced) {
@@ -380,7 +417,12 @@ function frame(now: number) {
   }
 
   // ── Spatial stability: nudge (never relocate), then keep inside the screen ──
-  if (!drag && T.makeRoom > 0) makeRoom(objs, T.makeRoom);
+  if (!drag) {
+    if (T.focusMode === 'field' && T.makeRoom > 0) makeRoom(objs, T.makeRoom);
+    // centre · push: only the centred object displaces others, far enough to clear it
+    if (T.focusMode === 'center-push' && centredId) pushClear(objs, centredId);
+    // centre · overlap: nothing else moves at all
+  }
   for (const o of objs) {
     const b = shift(o.body, o.disp);
     o.disp = {
