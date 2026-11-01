@@ -1,5 +1,8 @@
 # Lodestone — an experimental spatial desktop
 
+> **New: the Library.** An experimental file library lives in `src/library/` and opens by default at
+> `http://localhost:5173/` (the desk moved to `/#desk`). See [Library](#library) below.
+
 A browser prototype of a desktop that is organised by **attention and relationships** rather than workspaces, tiling or free floating. Windows attract and fuse into persistent **Assemblies**; a moving **field of attention** decides what is prominent; objects **morph** into simpler forms as they drift into the periphery; and everything stays on **one bounded screen**.
 
 ## Run it
@@ -76,3 +79,125 @@ src/ui/         WindowFrame, AssemblyOverlay (silhouette, tab, card), Desktop, T
 6. Is the collapsed card's summary (name, apps, one headline status, two secondary lines) **too much or too little** to recognise a project at a glance?
 7. When the desk is full, does the tightening field feel like **calm simplification** or like **losing things**?
 8. Does dragging something past other objects (the field follows your hand, so nearby windows wake up) **help** targeting or distract?
+
+
+---
+
+# Library
+
+An experimental file library for Lodestone. The question it is built to answer:
+
+> Can we make files so easy to recognise, find and use that people rarely need to think about where they are stored?
+
+Its premise is that **finding shouldn't require organising first**. The default is a stable chronological list
+with real thumbnails and an instant, non-disruptive Quick Look. Above it sits a shelf of files that are likely
+relevant to the current Assembly and application, each with a plain-language reason. Organising (tags,
+collections, folders) is available and never required.
+
+## Run it
+
+```bash
+npm install
+npm run dev          # http://localhost:5173/        Library, full screen, simulated context
+                     # http://localhost:5173/#desk   Lodestone desk with the Library as a window
+npm run build        # typecheck + production build
+```
+
+User state persists in `localStorage` (`lodestone:library:v1`). **Settings → Reset library state** clears it.
+
+## Things to try
+
+1. **Browse.** Arrow through *Everything* (about 220 items). It is grouped by day and sorted by last use; new
+   downloads count as activity, so they appear at the top marked **New**.
+2. **Quick Look.** Press **Space**. The preview floats over the right of the list; the list doesn't move. Use
+   **↑/↓** to step through files while the preview follows, **←/→** for PDF pages and slides, and **1–5** for the
+   views (Preview, Info, Tags, Activity, Related). **Enter** opens the file, **Esc** or **Space** closes the preview.
+3. **Folders.** Select `orbit` or `Lantern` and press **Space**. You can search inside the folder, open
+   subfolders with **Enter/→**, go back up with **←/Backspace** or the breadcrumbs, and see aggregate size,
+   activity, apps and Assemblies. *Work in this folder* turns it into a dedicated library view.
+4. **Context.** In the shelf, switch the Assembly from *Desktop Research* to *orbit*. The shelf changes, and the
+   list below stays put. Turn on **Why these?** to see the reasons behind each suggestion. Hover a tile to **pin**
+   it or hide it from this context.
+5. **Dynamic collection.** The dashed *Related to …* tile is generated from context. Open it and choose
+   **Pin as collection** to save a snapshot.
+6. **Tags.** Press **T**. Personal tags are solid. Suggestions from content are dashed and marked **◇**, labelled
+   *Simulated*, and can be approved (✓) or rejected (×). New tags reuse existing labels where they match.
+7. **Created.** Press **N**. A note exists immediately, already saved, with no folder chosen. Its first line becomes
+   its name; versions accumulate in *Info*. It is attached to the active Assembly.
+8. **Received.** Open *Received*. Press **K** to keep a download (no folder needed); **O** to organise, which is a
+   separate action.
+9. **Collections across providers.** Shift+↓ to select a PDF from Downloads, a Nextcloud image and a git file,
+   then press **C**.
+10. **Availability.** Field Drive files are dashed and can't be opened. Online-only Nextcloud files download on
+    preview. Use the sidebar to simulate plugging the drive in or taking Nextcloud offline.
+11. **Scale.** Settings → *Scale test* adds 5,000 archived items, and the list stays fast (it is virtualised).
+12. **On the desk.** Open `/#desk` and click **Library** in the top bar. Focus the *orbit* assembly, and the
+    Library's shelf follows the desk. Move attention away and the Library becomes a compact list of relevant files,
+    then a one-line widget. Clicking a compact entry opens it without moving attention. Code and notes open as real
+    editor and notes windows.
+
+## Architecture
+
+```
+src/library/
+  model/types.ts        identities: LibItem (file|folder), Provider, Tag, Relation, UsageEvent, Collection, LibAssembly
+  model/seed.ts         deterministic sample library (relative to a persisted epoch)
+  model/providers.ts    ProviderAdapter per storage provider + honest availability
+  model/store.ts        persisted *user overlay* only (tags, keeps, collections, pins, created docs, usage)
+  model/library.ts      derived index: seed + overlay → items, children, usage stats, co-usage, relations
+  model/relevance.ts    contextual ranking with tiered, explained signals
+  model/query.ts        scope / search / sort / day grouping with a frozen activity order
+  model/ai.ts           MetadataAnalyzer interface: simulated analyser + optional local Ollama; EmbeddingIndex stub
+  model/actions.ts      user operations (open, keep, create, tag, collect, attach, move); desk opener hook
+  deskBridge.ts         desk focus → library context; open files as desk windows
+  ui/                   LibraryApp, FileList (virtualised list + grid), Shelf, QuickLook, previews/, Panels, Sidebar
+src/apps/LibraryView.tsx  the Library as a Lodestone app: full / compact (contextual files) / widget
+```
+
+- **The seed is never mutated.** It is regenerated from a persisted epoch, and the store holds only what the user
+  changed. This gives a clean boundary for a later real index (SQLite/FTS, or tracker): replace `seed.ts` and
+  `providers.ts`, and the overlay becomes the user's metadata database.
+- **Spatial stability is enforced in the model.** Rows have fixed heights. The *recent* order is computed from
+  activity up to `orderAt`, so opening a file doesn't reshuffle the list while you work. A quiet "N new
+  activities · update order" link (or **R**) applies the new order when you ask, and so does a reload.
+- **Ranking is tiered** so explicit associations always win over inferred ones: pinned 1000, attached 300,
+  Assembly collection 220, used in the Assembly ≤120, focused app ≤70, references ≤45, co-usage ≤35, topic ≤30,
+  compatibility 6. Each contribution carries its own sentence, and the strongest one is shown.
+- **Inferred and observed information are kept apart.** Personal tags, AI suggestions (◇, dashed, labelled with
+  their engine) and observed usage (the *Activity* view) are separate in both data and UI.
+- **Provider abstraction.** `ProviderAdapter.read()` is async and can fail with a reason. Online-only files
+  simulate a fetch, and a disconnected drive returns a refusal that the preview shows as it is.
+
+## What is simulated
+
+- All files, contents, thumbnails (procedural SVG), providers, sync and availability.
+- "Open" logs a usage event and shows a toast; on the desk, code and Markdown open in real editor and notes windows.
+- Keep, move and version history are library state only. **Nothing is read from or written to a disk**, and the
+  UI says so whenever it might be ambiguous.
+- AI metadata: seeded topic tags and summaries, plus a deterministic keyword analyser. The **optional Ollama**
+  engine (Settings) calls only `http://localhost:11434`, only on request, and only for files whose contents are
+  local.
+
+## Limitations
+
+- Browser-only: no real filesystem access. Search is a substring match over names, paths, tags and contents,
+  with `kind:pdf` and `in:nextcloud` filters. There is no fuzzy matching or embeddings yet.
+- The desk can't host every app type yet: PDFs, images and documents opened from the desk only log usage.
+- Files can't be dragged between the library and desk windows.
+- The scale test reaches about 5,200 items. Index rebuilds are synchronous, which would need to move to a worker
+  at around 50k items.
+
+## What to test with people
+
+1. Without explanation, do people use **Space/arrows** to scan, and does the list feeling *fixed* help them recall
+   where something was ("it was just below the invoices")?
+2. Can people find a target file faster through **the shelf**, **chronology plus thumbnails** or **search**? Which
+   do they try first, and does that change after a week?
+3. Are the **reasons** under suggestions believed and understood? Does "Used 12× with this Assembly" earn more
+   trust than "Related by topic"?
+4. Do people grasp **Keep vs. Organise**, and do they trust that an unkept download won't vanish?
+5. Is the **folder vs. collection** distinction clear (solid folder versus double-square collection; "moves" versus
+   "references")?
+6. Does the **frozen order** feel stable or stale? Does anyone notice or use "update order"?
+7. Do people accept, ignore or remove **suggested tags**? Does the ◇ marking matter to them?
+8. On the desk: is the **compact Library** useful enough at the edge of attention to open files from it directly?

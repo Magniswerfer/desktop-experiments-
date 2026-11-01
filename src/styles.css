@@ -64,6 +64,23 @@
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ds-paper: #111112;
+  --ds-paper-sunken: #1a1a1c;
+  --ds-paper-raised: #202023;
+  --ds-ink: #f2f2ef;
+  --ds-ink-muted: #b4b4b0;
+  --ds-ink-faint: #8e8e8a;
+  --ds-ink-inverse: #111112;
+  --ds-rule-strong: #f2f2ef;
+  --ds-rule-soft: #323235;
+  --ds-signal-error: #f0715f;
+  --ds-signal-success: #8cc576;
+  --ds-signal-warning: #e3b72b;
+  --ds-signal-focus: #9fb0f5;
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
@@ -342,3 +359,21 @@ kbd { font-family: var(--ds-font-mono); font-size: 11px; border: 1px solid var(-
   .seam, .spin { animation: none; }
   .hair-progress { transition: none; }
 }
+
+/* ── Library on the desk (compact: contextual files) ── */
+.win[data-app="library"] .win-body { overflow: hidden; }
+.lib-compact { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 8px 10px 6px; gap: 6px; }
+.lc-head { display: flex; align-items: baseline; gap: 6px; font-size: var(--ds-text-small); white-space: nowrap; overflow: hidden; }
+.lc-head .label { font-size: 10.5px; letter-spacing: var(--ds-tracking-label); text-transform: uppercase; color: var(--ds-ink-faint); }
+.lc-new { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; background: var(--ds-ink); color: var(--ds-ink-inverse); padding: 0 4px; }
+.lc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
+.lc-row { width: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 3px 2px; text-align: left; cursor: pointer; }
+.lc-row:hover { background: color-mix(in srgb, var(--ds-ink) 5%, transparent); }
+.lc-txt { display: flex; flex-direction: column; min-width: 0; }
+.lc-name { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-why { font-size: 11px; color: var(--ds-ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-empty { font-family: var(--ds-font-serif); color: var(--ds-ink-muted); font-size: 13px; }
+.win[data-app="library"] .ds-asm-dot, .lib-compact .asm-dot { display: inline-flex; align-items: center; gap: 5px; }
+.lib-compact .asm-dot::before { content: ''; width: 8px; height: 8px; background: var(--ink, var(--ds-ink)); }
+a.bar-btn { text-decoration: none; display: inline-flex; align-items: center; }
+.lib-root { height: 100%; }

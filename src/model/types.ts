@@ -5,7 +5,7 @@
 // Anchors are normalized to the desktop (0..1) so the workspace survives any
 // viewport size — the desktop is always exactly the screen.
 
-export type AppKind = 'music' | 'terminal' | 'browser' | 'notes' | 'messages' | 'editor';
+export type AppKind = 'music' | 'terminal' | 'browser' | 'notes' | 'messages' | 'editor' | 'library';
 
 export type Ink = 'teal' | 'ultramarine' | 'oxide' | 'violet' | 'grass' | 'sienna' | 'chrome';
 export const INKS: Ink[] = ['teal', 'ultramarine', 'oxide', 'violet', 'grass', 'sienna', 'chrome'];

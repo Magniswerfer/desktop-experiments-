@@ -62,7 +62,10 @@ export interface MessagesState { contact: string; thread: Msg[]; unread: number;
 
 export interface EditorState { file: number; files: { name: string; code: string; dirty: boolean }[] }
 
-export type AppState = MusicState | TerminalState | BrowserState | NotesState | MessagesState | EditorState;
+/** The Library keeps its own persisted store; the window only remembers that it is a library. */
+export interface LibraryWinState { kind: 'library' }
+
+export type AppState = MusicState | TerminalState | BrowserState | NotesState | MessagesState | EditorState | LibraryWinState;
 
 export type StatusKind = 'ok' | 'err' | 'run' | 'idle' | 'unread' | 'play' | 'pause' | 'edit';
 export interface Summary { text: string; status: StatusKind }
@@ -91,6 +94,13 @@ const fmtAgo = (t: number | null) => {
 export { fmtAgo };
 
 export const APPS: Record<AppKind, AppMeta> = {
+  library: {
+    kind: 'library', name: 'Library',
+    full: { w: 860, h: 580 }, compact: { w: 300, h: 214 }, widget: { w: 236, h: 52 },
+    initial: (): LibraryWinState => ({ kind: 'library' }),
+    title: () => 'Files for your current work',
+    summary: () => ({ text: 'Library', status: 'idle' }),
+  },
   music: {
     kind: 'music', name: 'Music',
     full: { w: 420, h: 330 }, compact: { w: 300, h: 128 }, widget: { w: 224, h: 52 },

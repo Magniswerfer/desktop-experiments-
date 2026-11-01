@@ -13,7 +13,7 @@ function useKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (t.closest('input, textarea, select, [contenteditable], .lib') || e.metaKey || e.ctrlKey || e.altKey) return;
       const st = useDesktop.getState();
       if (e.key === 'm' || e.key === 'M') {
         const t = useTuning.getState();

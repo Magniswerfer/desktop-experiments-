@@ -7,6 +7,7 @@ import {
 } from './meta';
 import { Glyph, IconNext, IconPause, IconPlay, IconPrev, StatusMark } from './glyphs';
 import { runTask, sendMessage } from './sim';
+import { LibraryView } from './LibraryView';
 
 // Each app renders three presentations. They are not scaled copies of each
 // other: each one is re-composed for the attention it receives.
@@ -375,5 +376,5 @@ function EditorView({ id, pres }: ViewProps) {
 }
 
 export const VIEWS: Record<AppKind, (p: ViewProps) => ReactNode> = {
-  music: MusicView, terminal: TerminalView, browser: BrowserView, notes: NotesView, messages: MessagesView, editor: EditorView,
+  music: MusicView, terminal: TerminalView, browser: BrowserView, notes: NotesView, messages: MessagesView, editor: EditorView, library: LibraryView,
 };

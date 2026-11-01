@@ -11,6 +11,7 @@ export function Glyph({ app, size = 14 }: { app: AppKind; size?: number }) {
     case 'browser': return <svg {...s}><circle {...P} cx="8" cy="8" r="6.2" /><path {...P} d="M1.8 8h12.4M8 1.8c-3 3.4-3 9 0 12.4M8 1.8c3 3.4 3 9 0 12.4" /></svg>;
     case 'notes': return <svg {...s}><path {...P} d="M3 1.8h10v12.4H3zM5.5 5h5M5.5 8h5M5.5 11h3" /></svg>;
     case 'messages': return <svg {...s}><path {...P} d="M1.8 2.5h12.4v8.5H7l-3.5 2.8V11H1.8z" /></svg>;
+    case 'library': return <svg {...s}><path {...P} d="M2 2.5h3v11H2zM6.5 2.5h3v11h-3zM11 3.2l2.6-.7 2 10.6-2.6.6z" /></svg>;
     case 'editor': return <svg {...s}><path {...P} d="M5.5 4L2 8l3.5 4M10.5 4L14 8l-3.5 4M9 2.5l-2 11" /></svg>;
   }
 }
